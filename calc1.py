@@ -1,4 +1,4 @@
-INTEGER, PLUS, EOF = "INTEGER", "PLUS", "EOF"
+INTEGER, PLUS, MINUS, EOF = "INTEGER", "PLUS", "MINUS", "EOF"
 
 
 class Token:
@@ -22,20 +22,40 @@ class Interpreter:
     def error(self):
         raise Exception('Error parsing input')
 
+    def character_is_symbol(self, character):
+        symbols = ["+", "-"]
+        return character in symbols
+
     def get_next_token(self):
         text = self.text
         if self.pos > len(text) - 1:
             return Token(EOF, None)
-        current_char = text[self.pos]
-        if current_char.isdigit():
-            token = Token(INTEGER, int(current_char))
-            self.pos += 1
-            return token
-        if current_char == "+":
-            token = Token(PLUS, current_char)
-            self.pos += 1
-            return token
-        self.error()
+        final_result = ""
+        for i in range(self.pos, len(text)):
+            current_char = text[i]
+            if self.character_is_symbol(current_char) and len(final_result) != 0:
+                token = Token(INTEGER, int(final_result))
+                return token
+            if i == len(text) - 1 and current_char.isdigit():
+                final_result += current_char
+                token = Token(INTEGER, int(final_result))
+                return token
+            elif current_char.isdigit():
+                final_result += current_char
+                self.pos += 1
+            elif current_char == "+":
+                self.pos += 1
+                token = Token(PLUS, current_char)
+                return token
+            elif current_char == "-":
+                self.pos += 1
+                token = Token(MINUS, current_char)
+                return token
+            elif current_char == " ":
+                self.pos += 1
+                continue
+            else:
+                self.error()
 
     def eat(self, token_type):
         if self.current_token.type == token_type:
@@ -49,22 +69,23 @@ class Interpreter:
         self.eat(INTEGER)
 
         op = self.current_token
-        self.eat(PLUS)
+        self.eat(op.type)
 
         right = self.current_token
         self.eat(INTEGER)
-        result = left.value + right.value
+        result = eval(f"{left.value}{op.value}{right.value}")
         return result
 
 
 def main():
     while True:
         try:
-            text = input('calc> ')
+            raw_text = input('calc> ')
         except EOFError:
             break
-        if not text:
+        if not raw_text:
             continue
+        text = raw_text.rstrip()
         interpreter = Interpreter(text)
         result = interpreter.expr()
         print(result)
