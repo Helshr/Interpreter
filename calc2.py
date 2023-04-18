@@ -1,4 +1,4 @@
-INTEGER, PLUS, MINUS, EOF = "INTEGER", "PLUS", "MINUS", "EOF"
+INTEGER, PLUS, MINUS, EOF, MULTIPLY, DIVISION = "INTEGER", "PLUS", "MINUS", "EOF", "MULTIPLY", "DIVISION"
 
 
 class Token:
@@ -48,15 +48,18 @@ class Interpreter:
                 continue
             if self.current_char.isdigit():
                 return Token(INTEGER, self.integer())
-
             if self.current_char == "+":
                 self.advance()
                 return Token(PLUS, self.current_char)
-
             if self.current_char == "-":
                 self.advance()
                 return Token(MINUS, self.current_char)
-
+            if self.current_char == "*":
+                self.advance()
+                return Token(MULTIPLY, self.current_char)
+            if self.current_char == "/":
+                self.advance()
+                return Token(DIVISION, self.current_char)
             self.error()
         return Token(EOF, None)
 
@@ -70,18 +73,25 @@ class Interpreter:
         self.current_token = self.get_next_token()
         left = self.current_token
         self.eat(INTEGER)
-
         op = self.current_token
         if op.type == PLUS:
             self.eat(PLUS)
-        else:
+        elif op.type == MINUS:
             self.eat(MINUS)
+        elif op.type == MULTIPLY:
+            self.eat(MULTIPLY)
+        else:
+            self.eat(DIVISION)
         right = self.current_token
         self.eat(INTEGER)
         if op.type == PLUS:
             result = left.value + right.value
-        else:
+        elif op.type == MINUS:
             result = left.value - right.value
+        elif op.type == MULTIPLY:
+            result = left.value * right.value
+        else:
+            result = left.value / float(right.value)
         return result
 
 
