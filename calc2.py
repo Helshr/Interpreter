@@ -1,4 +1,4 @@
-INTEGER, PLUS, MINUS, EOF = "INTEGER", "PLUS", "MINUS", "EOF"
+INTEGER, PLUS, MINUS, EOF, MULTIPLY, DIVISION = "INTEGER", "PLUS", "MINUS", "EOF", "MULTIPLY", "DIVISION"
 
 
 class Token:
@@ -48,15 +48,18 @@ class Interpreter:
                 continue
             if self.current_char.isdigit():
                 return Token(INTEGER, self.integer())
-
             if self.current_char == "+":
                 self.advance()
                 return Token(PLUS, self.current_char)
-
             if self.current_char == "-":
                 self.advance()
                 return Token(MINUS, self.current_char)
-
+            if self.current_char == "*":
+                self.advance()
+                return Token(MULTIPLY, self.current_char)
+            if self.current_char == "/":
+                self.advance()
+                return Token(DIVISION, self.current_char)
             self.error()
         return Token(EOF, None)
 
@@ -66,22 +69,30 @@ class Interpreter:
         else:
             self.error()
 
-    def expr(self):
-        self.current_token = self.get_next_token()
-        left = self.current_token
-        self.eat(INTEGER)
+    def operator_function(self, op_type, number_list):
+        if op_type == PLUS:
+            result = number_list[0] + number_list[1]
+        elif op_type == MINUS:
+            result = number_list[0] - number_list[1]
+        elif op_type == MULTIPLY:
+            result = number_list[0] * number_list[1]
+        else:
+            result = number_list[0] / float(number_list[1])
+        return result
 
-        op = self.current_token
-        if op.type == PLUS:
-            self.eat(PLUS)
-        else:
-            self.eat(MINUS)
-        right = self.current_token
-        self.eat(INTEGER)
-        if op.type == PLUS:
-            result = left.value + right.value
-        else:
-            result = left.value - right.value
+    def expr(self):
+        result = 0
+        number_and_list = []
+        op_type = None
+        while self.pos < len(self.text):
+            self.current_token = self.get_next_token()
+            if self.current_token.type is INTEGER:
+                number_and_list.append(self.current_token.value)
+            else:
+                op_type = self.current_token.type
+            if op_type is not None and len(number_and_list) == 2:
+                result = self.operator_function(op_type, number_and_list)
+                number_and_list = [result]
         return result
 
 
@@ -94,6 +105,7 @@ def main():
         if not raw_text:
             continue
         text = raw_text.rstrip()
+
         interpreter = Interpreter(text)
         result = interpreter.expr()
         print(result)
