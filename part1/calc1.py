@@ -1,4 +1,4 @@
-INTEGER, PLUS, MINUS, EOF = "INTEGER", "PLUS", "MINUS", "EOF"
+INTEGER, PLUS, MINUS, EOF, MULTIPLY = "INTEGER", "PLUS", "MINUS", "EOF", "MULTIPLY"
 
 
 class Token:
@@ -51,7 +51,7 @@ class Interpreter:
                 self.pos += 1
                 token = Token(MINUS, current_char)
                 return token
-            elif current_char == " ":
+            elif current_char.isspace():
                 self.pos += 1
                 continue
             else:
